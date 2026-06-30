@@ -64,6 +64,20 @@ DATABASE_URL="postgresql://plotpulse:plotpulse@localhost:5432/plotpulse"
 
 Then `npm run db:migrate && npm run db:seed`.
 
+## Document storage (`/documents`)
+
+Upload property documents — PlotPulse detects the type and creates reminders automatically:
+
+| Document type | Reminders created |
+|---------------|-------------------|
+| Insurance | 30 & 7 days before renewal |
+| EPC | 60 & 30 days before expiry (10-year validity) |
+| Gas safety (CP12) | 30 & 7 days before annual check |
+| Utility contracts | 14 & 3 days before renewal |
+| Mortgage | 60 & 30 days before rate review |
+
+Free plan: 5 documents · Premium: unlimited. Reminders due within 30 days also appear in `/alerts`.
+
 ## API routes
 
 | Route | Description |
