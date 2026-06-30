@@ -56,7 +56,7 @@ export function PropertyDashboard({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-gradient-to-br from-teal-700 to-teal-800 text-white">
           <p className="text-sm text-teal-100">Area average (UK HPI)</p>
-          <p className="mt-1 text-3xl font-bold">
+          <p className="mt-1 text-3xl font-bold tabular-nums">
             {formatCurrency(data.valuation.estimatedValue)}
           </p>
           <p className="mt-2 text-sm text-teal-100">
@@ -66,7 +66,7 @@ export function PropertyDashboard({
 
         <Card>
           <p className="text-sm text-slate-500">Latest sale in postcode</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">
+          <p className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">
             {latestSale ? formatCurrency(latestSale.amount) : "—"}
           </p>
           {latestSale && (

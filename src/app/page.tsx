@@ -37,7 +37,7 @@ export default function HomePage() {
               actionable insight for homeowners and investors.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <LinkButton href="/onboarding" size="lg">
+              <LinkButton href="/onboarding" variant="accent" size="lg">
                 Enter your postcode
               </LinkButton>
               <LinkButton
@@ -85,7 +85,7 @@ export default function HomePage() {
               <strong>postcode district</strong> (e.g. SW11) for meaningful
               statistics.
             </p>
-            <LinkButton href="/onboarding" className="mt-6">
+            <LinkButton href="/onboarding" variant="accent" className="mt-6">
               Get started free
             </LinkButton>
           </div>

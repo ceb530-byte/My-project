@@ -119,7 +119,7 @@ export function MarketingNav() {
           </Link>
           <Link
             href="/onboarding"
-            className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-teal-900 hover:bg-teal-50"
+            className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-amber-900/20 hover:bg-amber-600"
           >
             Get started
           </Link>

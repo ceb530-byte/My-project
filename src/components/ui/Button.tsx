@@ -6,6 +6,8 @@ const variants = {
   secondary:
     "bg-white text-teal-900 border border-teal-200 hover:bg-teal-50",
   ghost: "text-teal-800 hover:bg-teal-50",
+  accent:
+    "bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-900/20",
   premium:
     "bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-900/10",
 };
