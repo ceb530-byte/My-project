@@ -2,90 +2,95 @@
 
 **UK property & local intelligence** — what's changing around your home or investment property, and how can you benefit?
 
-## Recommended name: **PlotPulse**
-
-| Name | Why it works |
-|------|--------------|
-| **PlotPulse** ✓ | "Plot" = your property/land; "Pulse" = live monitoring of local change. Memorable, brandable, works for homeowners and investors. |
-| PostPatch | Very British ("patch" = neighbourhood). Postcode-native but less distinctive. |
-| Hearthscope | Warm, homeowner-focused. Less investor appeal. |
-
-## Local area recommendation
-
-| Tier | Definition | Use for |
-|------|------------|---------|
-| **Immediate** | 500m radius | Neighbour planning applications |
-| **Neighbourhood** (default) | **750m radius, capped to postcode sector** | Feed, alerts, community |
-| **District** | Outward postcode (e.g. SW11) | Price trends, investment stats |
-
-## Live data integrations
-
-| Source | Data | Auth required |
-|--------|------|---------------|
-| [postcodes.io](https://postcodes.io) | Geocoding, admin areas | No |
-| [planning.data.gov.uk](https://planning.data.gov.uk) | Planning applications | No |
-| [data.police.uk](https://data.police.uk) | Street-level crime | No |
-| [Land Registry UK HPI](https://landregistry.data.gov.uk) | Area prices & trends | No |
-| [Land Registry Price Paid](https://landregistry.data.gov.uk) | Sale history (SPARQL) | No |
-| [Environment Agency](https://environment.data.gov.uk) | Flood warnings | No |
-| [EPC Open Data](https://epc.opendatacommunities.org) | Energy ratings | API key (free) |
-| Clerk | Authentication | Optional |
-| Stripe | Premium billing | Optional |
-| OpenAI | AI moderation | Optional |
-
-## Setup
+## Quick start
 
 ```bash
 cp .env.example .env.local
 npm install
+npm run db:migrate   # or: npm run db:push
+npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and click **Quick demo** or sign up with your postcode.
+Open http://localhost:3000 → **Quick demo (SW11 4QR)** or sign up with your postcode.
 
-### Environment variables
+## Features
 
-See `.env.example` for all optional integrations. The app works out of the box with free public APIs — no keys required for core features.
+### Live data (free public APIs)
+| Source | Data |
+|--------|------|
+| postcodes.io | Geocoding, admin areas |
+| planning.data.gov.uk | Planning applications (750m) |
+| data.police.uk | Crime & ASB (750m) |
+| Land Registry UK HPI | Area prices & trends |
+| Land Registry Price Paid | Sale history |
+| Environment Agency | Flood warnings |
+| GIAS / Ofsted (seeded DB) | Nearby schools & ratings |
+| Council tax | Estimated band (+ optional Homedata VOA) |
 
-## Routes
+### Database (Prisma + SQLite/Postgres)
+- **Users** — persisted signup with postcode verification
+- **Community posts** — moderated, stored in DB
+- **Alerts** — synced from live data, persisted per user
+- **Subscriptions** — Stripe webhook → premium tier
+- **Schools** — GIAS seed + `scripts/sync-schools.ts` for full England sync
+- **Council tax cache** — Homedata or estimated bands
 
-| Route | Description |
-|-------|-------------|
-| `/` | Marketing landing |
-| `/onboarding` | Postcode signup + demo mode |
-| `/dashboard` | Live property dashboard |
-| `/feed` | Local intelligence from real APIs |
-| `/alerts` | Smart alerts from live data |
-| `/tools` | Rental yield, mortgage, area comparison calculators |
-| `/premium` | Premium features + Stripe checkout |
-| `/community` | Moderated neighbour discussions |
+### Email alerts (Resend)
+- Welcome email on signup
+- Alert digest cron: `POST /api/cron/alerts` with `Authorization: Bearer $CRON_SECRET`
+- User preferences at `/alerts` (planning, price, crime, flood toggles)
+
+### Optional integrations
+| Env var | Service |
+|---------|---------|
+| `HOMEDATA_API_KEY` | Verified council tax bands (VOA) |
+| `EPC_API_EMAIL` + `EPC_API_KEY` | Live EPC certificates |
+| `RESEND_API_KEY` | Email delivery |
+| `STRIPE_*` | Premium billing |
+| `CLERK_*` | Production auth |
+| `OPENAI_API_KEY` | AI moderation |
+
+## Production Postgres
+
+```bash
+docker compose up -d postgres
+```
+
+Update `prisma/schema.prisma` provider to `postgresql` and set:
+```
+DATABASE_URL="postgresql://plotpulse:plotpulse@localhost:5432/plotpulse"
+```
+
+Then `npm run db:migrate && npm run db:seed`.
 
 ## API routes
 
-- `GET /api/property?postcode=SW114QR` — aggregated property intelligence
-- `GET /api/postcode/[postcode]` — geocoding lookup
-- `POST /api/auth/session` — dev signup (sets session cookie)
-- `POST /api/auth/demo` — quick demo session
-- `POST /api/community/posts` — create moderated community post
-- `POST /api/stripe/checkout` — premium subscription checkout
+| Route | Description |
+|-------|-------------|
+| `GET /api/property?postcode=` | Aggregated live intelligence + alert sync |
+| `GET /api/alerts` | User's persisted alerts |
+| `PATCH /api/alerts/preferences` | Email/alert toggles |
+| `POST /api/cron/alerts` | Send email digests (cron) |
+| `POST /api/community/posts` | Create moderated post |
+| `POST /api/auth/session` | Signup (DB + welcome email) |
 
-## Architecture
+## Local area model
 
-```
-postcode → postcodes.io (lat/lng)
-         → parallel fetch:
-            • Land Registry HPI + Price Paid
-            • planning.data.gov.uk (750m polygon)
-            • data.police.uk (750m filter)
-            • Environment Agency floods
-            • EPC (if API key set)
-         → aggregated feed + alerts + dashboard
+| Tier | Definition | Used for |
+|------|------------|----------|
+| Immediate | 500m | Neighbour planning |
+| **Neighbourhood** | **750m + sector cap** | Feed, alerts, community |
+| District | Outward postcode | Price trends |
+
+## Scripts
+
+```bash
+npm run db:seed          # Seed schools + demo user
+npx tsx scripts/sync-schools.ts  # Full GIAS sync (when accessible)
+curl -X POST http://localhost:3000/api/cron/alerts -H "Authorization: Bearer $CRON_SECRET"
 ```
 
 ## Revenue model
 
-- Premium subscriptions (Stripe)
-- Mortgage & conveyancing referrals
-- Insurance commission
-- Tradesperson advertising
-- Estate agent leads
+Premium subscriptions · mortgage/conveyancing referrals · insurance commission · tradesperson ads · estate agent leads

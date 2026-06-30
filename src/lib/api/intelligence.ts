@@ -1,11 +1,15 @@
+import { fetchCouncilTaxBand } from "./council-tax";
 import { fetchCrimeNearPoint } from "./crime";
 import { fetchEpcForPostcode } from "./epc";
 import { fetchFloodStatus } from "./flood";
 import { fetchHpiForDistrict, fetchPricePaidForPostcode } from "./hpi";
 import { fetchPlanningNearPoint } from "./planning";
 import { lookupPostcode, sectorFromPostcode } from "./postcodes";
+import { fetchSchoolsNearPoint } from "./schools";
 import type { FeedItem } from "../types";
 import { LOCAL_AREA_TIERS } from "../local-area";
+import type { CouncilTaxResult } from "./council-tax";
+import type { SchoolResult } from "./schools";
 
 export interface PropertyIntelligence {
   postcode: string;
@@ -29,6 +33,8 @@ export interface PropertyIntelligence {
     score: number;
     records: Awaited<ReturnType<typeof fetchEpcForPostcode>>;
   };
+  councilTax: CouncilTaxResult;
+  schoolCatchments: SchoolResult[];
   flood: Awaited<ReturnType<typeof fetchFloodStatus>>;
   crime: Awaited<ReturnType<typeof fetchCrimeNearPoint>>;
   planning: Awaited<ReturnType<typeof fetchPlanningNearPoint>>;
@@ -44,7 +50,7 @@ export async function buildPropertyIntelligence(
   const radius = LOCAL_AREA_TIERS.neighbourhood.radiusMetres;
   const normalisedPostcode = geo.postcode;
 
-  const [hpi, saleHistory, epcRecords, flood, crime, planning] =
+  const [hpi, saleHistory, epcRecords, flood, crime, planning, schools] =
     await Promise.all([
       fetchHpiForDistrict(geo.admin_district),
       fetchPricePaidForPostcode(normalisedPostcode),
@@ -52,7 +58,13 @@ export async function buildPropertyIntelligence(
       fetchFloodStatus(geo.latitude, geo.longitude),
       fetchCrimeNearPoint(geo.latitude, geo.longitude, radius),
       fetchPlanningNearPoint(geo.latitude, geo.longitude, radius, 15),
+      fetchSchoolsNearPoint(geo.latitude, geo.longitude, 2000),
     ]);
+
+  const councilTax = await fetchCouncilTaxBand(normalisedPostcode, {
+    averagePrice: hpi?.averagePrice,
+    hpiIndex: 93,
+  });
 
   const topEpc = epcRecords[0];
   const latestSale = saleHistory[0];
@@ -63,6 +75,7 @@ export async function buildPropertyIntelligence(
     flood,
     hpi,
     geo,
+    schools,
   });
 
   return {
@@ -87,6 +100,8 @@ export async function buildPropertyIntelligence(
       score: topEpc?.score ?? 0,
       records: epcRecords,
     },
+    councilTax,
+    schoolCatchments: schools,
     flood,
     crime,
     planning,
@@ -100,12 +115,14 @@ function buildFeedFromLiveData({
   flood,
   hpi,
   geo,
+  schools,
 }: {
   planning: Awaited<ReturnType<typeof fetchPlanningNearPoint>>;
   crime: Awaited<ReturnType<typeof fetchCrimeNearPoint>>;
   flood: Awaited<ReturnType<typeof fetchFloodStatus>>;
   hpi: Awaited<ReturnType<typeof fetchHpiForDistrict>>;
   geo: { admin_district: string };
+  schools: SchoolResult[];
 }): FeedItem[] {
   const items: FeedItem[] = [];
   let id = 1;
@@ -164,6 +181,19 @@ function buildFeedFromLiveData({
         hpi.percentageChange > 0
           ? "Strong area momentum — review remortgage or sale timing."
           : "Softening market — negotiate harder on purchases or improvements.",
+    });
+  }
+
+  const outstanding = schools.filter((s) => s.ofstedRating === "Outstanding");
+  if (outstanding.length > 0) {
+    items.push({
+      id: `live-${id++}`,
+      category: "schools",
+      title: `${outstanding.length} Outstanding school${outstanding.length > 1 ? "s" : ""} within 2km`,
+      summary: `Nearest: ${outstanding[0].name} (${outstanding[0].distanceMetres}m). ${schools.filter((s) => s.inCatchment).length} schools in likely catchment range.`,
+      distanceMetres: outstanding[0].distanceMetres,
+      publishedAt: new Date().toISOString(),
+      source: "GIAS / Ofsted",
     });
   }
 

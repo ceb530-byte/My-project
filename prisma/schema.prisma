@@ -1,0 +1,128 @@
+// PlotPulse database schema
+// SQLite for local dev; switch provider to "postgresql" for production (see docker-compose.yml)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  postcode  String
+  tier      String   @default("free") // free | premium
+  clerkId   String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts              CommunityPost[]
+  alertPreferences   AlertPreference?
+  subscriptions      Subscription[]
+  alerts             Alert[]
+  emailLogs          EmailLog[]
+}
+
+model CommunityPost {
+  id            String   @id @default(cuid())
+  authorId      String
+  author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title         String
+  body          String
+  category      String
+  verifiedLocal Boolean  @default(true)
+  replies       Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  priority  String   @default("medium")
+  read      Boolean  @default(false)
+  emailed   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, emailed])
+}
+
+model AlertPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled    Boolean  @default(true)
+  planningAlerts  Boolean  @default(true)
+  priceAlerts     Boolean  @default(true)
+  crimeAlerts     Boolean  @default(true)
+  floodAlerts     Boolean  @default(true)
+  digestFrequency String   @default("daily") // instant | daily | weekly
+  updatedAt       DateTime @updatedAt
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?   @unique
+  status               String    @default("inactive") // active | inactive | cancelled
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  subject   String
+  status    String   @default("sent")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model School {
+  id            String  @id @default(cuid())
+  urn           String  @unique
+  name          String
+  phase         String
+  type          String?
+  ofstedRating  String?
+  ofstedDate    String?
+  latitude      Float
+  longitude     Float
+  postcode      String?
+  localAuthority String?
+  ageLow        Int?
+  ageHigh       Int?
+  pupils        Int?
+  gender        String?
+
+  @@index([latitude, longitude])
+}
+
+model CouncilTaxRecord {
+  id        String   @id @default(cuid())
+  postcode  String
+  address   String?
+  band      String
+  source    String   @default("estimate") // voa | homedata | estimate
+  createdAt DateTime @default(now())
+
+  @@index([postcode])
+}
