@@ -1,0 +1,232 @@
+import type {
+  Alert,
+  CommunityPost,
+  FeedItem,
+  Opportunity,
+  Property,
+  UserProfile,
+} from "./types";
+
+export const demoProperty: Property = {
+  id: "prop-1",
+  address: "42 Maple Grove",
+  postcode: "SW11 4QR",
+  estimatedValue: 685000,
+  valueChangePercent: 2.4,
+  lastSoldPrice: 620000,
+  lastSoldDate: "2021-03-15",
+  epcRating: "C",
+  epcScore: 72,
+  councilTaxBand: "F",
+  floodRisk: "low",
+  schoolCatchments: [
+    {
+      name: "Belleville Primary School",
+      type: "primary",
+      ofstedRating: "Outstanding",
+      distanceMetres: 320,
+      inCatchment: true,
+    },
+    {
+      name: "Chestnut Grove Academy",
+      type: "secondary",
+      ofstedRating: "Good",
+      distanceMetres: 890,
+      inCatchment: true,
+    },
+    {
+      name: "Thames Christian School",
+      type: "secondary",
+      ofstedRating: "Good",
+      distanceMetres: 1200,
+      inCatchment: false,
+    },
+  ],
+};
+
+export const demoUser: UserProfile = {
+  name: "Alex Morgan",
+  email: "alex@example.com",
+  postcode: "SW11 4QR",
+  tier: "free",
+  properties: [demoProperty],
+};
+
+export const feedItems: FeedItem[] = [
+  {
+    id: "f1",
+    category: "planning",
+    title: "Loft conversion approved at 38 Maple Grove",
+    summary:
+      "Two-storey rear and loft extension granted. May indicate rising local values and precedent for similar works.",
+    distanceMetres: 45,
+    publishedAt: "2026-06-28T10:00:00Z",
+    source: "Wandsworth Council",
+    actionable: "Review precedent if you're considering an extension.",
+  },
+  {
+    id: "f2",
+    category: "development",
+    title: "Former pub site — 86 homes approved",
+    summary:
+      "Planning committee approved mixed-use scheme with 20% affordable housing on Battersea Park Road.",
+    distanceMetres: 620,
+    publishedAt: "2026-06-27T14:30:00Z",
+    source: "Planning Portal",
+    actionable: "Monitor impact on local traffic and school places.",
+  },
+  {
+    id: "f3",
+    category: "transport",
+    title: "Northern Line extension works — weekend closures",
+    summary: "Clapham South to Kennington closed 12–14 July for track maintenance.",
+    distanceMetres: 1100,
+    publishedAt: "2026-06-26T09:00:00Z",
+    source: "TfL",
+  },
+  {
+    id: "f4",
+    category: "retail",
+    title: "Lidl confirmed for former bank unit",
+    summary: "New supermarket expected to open Q1 2027 on Northcote Road.",
+    distanceMetres: 480,
+    publishedAt: "2026-06-25T11:00:00Z",
+    source: "Local press",
+    actionable: "Convenience uplift may support rental demand.",
+  },
+  {
+    id: "f5",
+    category: "crime",
+    title: "Antisocial behaviour reports up 12% this quarter",
+    summary:
+      "Increase concentrated around Clapham Junction station. Police patrols stepped up.",
+    distanceMetres: 800,
+    publishedAt: "2026-06-24T08:00:00Z",
+    source: "Police.uk",
+  },
+  {
+    id: "f6",
+    category: "schools",
+    title: "New primary free school proposed",
+    summary: "Department for Education consulting on 420-place school near Wandsworth Common.",
+    distanceMetres: 950,
+    publishedAt: "2026-06-22T16:00:00Z",
+    source: "DfE",
+    premium: true,
+  },
+];
+
+export const alerts: Alert[] = [
+  {
+    id: "a1",
+    type: "planning_neighbour",
+    title: "Neighbour planning application",
+    message:
+      "38 Maple Grove applied for a loft conversion — 45m from your property.",
+    createdAt: "2026-06-28T10:05:00Z",
+    read: false,
+    priority: "medium",
+  },
+  {
+    id: "a2",
+    type: "development_approved",
+    title: "Large development approved nearby",
+    message: "86-home scheme approved 620m away on Battersea Park Road.",
+    createdAt: "2026-06-27T15:00:00Z",
+    read: false,
+    priority: "high",
+  },
+  {
+    id: "a3",
+    type: "price_change",
+    title: "SW11 4 prices moved",
+    message: "Average sold prices in your postcode sector rose +2.4% this quarter.",
+    createdAt: "2026-06-26T09:00:00Z",
+    read: true,
+    priority: "medium",
+  },
+  {
+    id: "a4",
+    type: "insurance_renewal",
+    title: "Buildings insurance renewal due",
+    message: "Your policy renews in 28 days. Compare quotes to save.",
+    createdAt: "2026-06-20T09:00:00Z",
+    read: true,
+    priority: "low",
+  },
+];
+
+export const opportunities: Opportunity[] = [
+  {
+    id: "o1",
+    type: "expired_planning",
+    title: "Expired planning — rear extension",
+    address: "15 Elspeth Road, SW11",
+    distanceMetres: 280,
+    summary: "Full planning for double-storey rear extension lapsed March 2026.",
+    estimatedUpside: "£45k–£70k value add if re-applied",
+  },
+  {
+    id: "o2",
+    type: "development_plot",
+    title: "Large corner plot — underdeveloped",
+    address: "Garage block, Storm Street, SW11",
+    distanceMetres: 540,
+    summary: "0.18 acre site with prior approval for 4 flats (2019, expired).",
+    estimatedUpside: "High development potential",
+  },
+  {
+    id: "o3",
+    type: "extension_potential",
+    title: "Side return extension opportunity",
+    address: "29 Maple Grove, SW11",
+    distanceMetres: 120,
+    summary: "Victorian terrace with unconverted side return. EPC D — room to improve.",
+    estimatedUpside: "£35k–£50k",
+  },
+  {
+    id: "o4",
+    type: "hmo_conversion",
+    title: "5-bed HMO conversion potential",
+    address: "8 Webbs Road, SW11",
+    distanceMetres: 410,
+    summary: "Large Victorian house, C3 use, no HMO licence on record.",
+    estimatedUpside: "8.2% gross yield est.",
+  },
+];
+
+export const communityPosts: CommunityPost[] = [
+  {
+    id: "c1",
+    author: "Sarah T.",
+    avatarInitials: "ST",
+    title: "Anyone know the timeline for the Lidl on Northcote Road?",
+    body: "Saw the hoardings go up — wondering if it'll affect parking on our street.",
+    category: "local_info",
+    replies: 7,
+    createdAt: "2026-06-29T18:00:00Z",
+    verifiedLocal: true,
+  },
+  {
+    id: "c2",
+    author: "James K.",
+    avatarInitials: "JK",
+    title: "Recommended builder for loft conversions?",
+    body: "Looking for someone who's done work on Maple Grove terraces before.",
+    category: "trades",
+    replies: 12,
+    createdAt: "2026-06-28T12:00:00Z",
+    verifiedLocal: true,
+  },
+  {
+    id: "c3",
+    author: "Priya M.",
+    avatarInitials: "PM",
+    title: "Thoughts on the 86-home Battersea Park Road scheme?",
+    body: "Planning committee approved it last week. Concerned about traffic on Elspeth Road.",
+    category: "planning",
+    replies: 23,
+    createdAt: "2026-06-27T20:00:00Z",
+    verifiedLocal: true,
+  },
+];
