@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { moderateWithAi, verifyPostcodeMatch } from "@/lib/moderation";
 import { getSessionUser } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
 
 const postSchema = z.object({
   title: z.string().min(5).max(200),
@@ -9,30 +10,25 @@ const postSchema = z.object({
   category: z.enum(["question", "planning", "trades", "local_info"]),
 });
 
-const posts: Array<{
-  id: string;
-  author: string;
-  title: string;
-  body: string;
-  category: string;
-  createdAt: string;
-  verifiedLocal: boolean;
-  replies: number;
-}> = [
-  {
-    id: "seed-1",
-    author: "Sarah T.",
-    title: "Anyone know the timeline for the Lidl on Northcote Road?",
-    body: "Saw the hoardings go up — wondering if it'll affect parking on our street.",
-    category: "local_info",
-    createdAt: new Date().toISOString(),
-    verifiedLocal: true,
-    replies: 7,
-  },
-];
-
 export async function GET() {
-  return NextResponse.json({ posts });
+  const posts = await prisma.communityPost.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    include: { author: { select: { name: true } } },
+  });
+
+  return NextResponse.json({
+    posts: posts.map((p) => ({
+      id: p.id,
+      author: p.author.name,
+      title: p.title,
+      body: p.body,
+      category: p.category,
+      createdAt: p.createdAt.toISOString(),
+      verifiedLocal: p.verifiedLocal,
+      replies: p.replies,
+    })),
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -69,17 +65,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const post = {
-    id: `post-${Date.now()}`,
-    author: user.name,
-    title: parsed.data.title,
-    body: parsed.data.body,
-    category: parsed.data.category,
-    createdAt: new Date().toISOString(),
-    verifiedLocal: true,
-    replies: 0,
-  };
+  const post = await prisma.communityPost.create({
+    data: {
+      authorId: user.id,
+      title: parsed.data.title,
+      body: parsed.data.body,
+      category: parsed.data.category,
+      verifiedLocal: true,
+    },
+    include: { author: { select: { name: true } } },
+  });
 
-  posts.unshift(post);
-  return NextResponse.json({ post }, { status: 201 });
+  return NextResponse.json(
+    {
+      post: {
+        id: post.id,
+        author: post.author.name,
+        title: post.title,
+        body: post.body,
+        category: post.category,
+        createdAt: post.createdAt.toISOString(),
+        verifiedLocal: post.verifiedLocal,
+        replies: post.replies,
+      },
+    },
+    { status: 201 }
+  );
 }

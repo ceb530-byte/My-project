@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { setSessionCookie } from "@/lib/auth/session";
+import { upsertUser } from "@/lib/db/users";
 
 export async function POST() {
-  const user = {
-    id: "demo-user",
-    name: "Demo User",
+  const dbUser = await upsertUser({
     email: "demo@plotpulse.app",
+    name: "Demo User",
     postcode: "SW11 4QR",
-    tier: "free" as const,
+  });
+
+  const user = {
+    id: dbUser.id,
+    name: dbUser.name,
+    email: dbUser.email,
+    postcode: dbUser.postcode,
+    tier: dbUser.tier as "free" | "premium",
   };
 
   await setSessionCookie(user);

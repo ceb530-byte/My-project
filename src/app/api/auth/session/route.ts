@@ -3,6 +3,8 @@ import { z } from "zod";
 import { setSessionCookie } from "@/lib/auth/session";
 import { parsePostcode } from "@/lib/local-area";
 import { lookupPostcode } from "@/lib/api/postcodes";
+import { upsertUser } from "@/lib/db/users";
+import { sendEmail, welcomeEmailHtml } from "@/lib/email";
 
 const signupSchema = z.object({
   name: z.string().min(2).max(80),
@@ -31,15 +33,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Postcode not found" }, { status: 404 });
   }
 
-  const user = {
-    id: `dev-${Buffer.from(parsed.data.email).toString("base64url").slice(0, 12)}`,
-    name: parsed.data.name,
+  const dbUser = await upsertUser({
     email: parsed.data.email,
+    name: parsed.data.name,
     postcode: geo.postcode,
-    tier: "free" as const,
+  });
+
+  const user = {
+    id: dbUser.id,
+    name: dbUser.name,
+    email: dbUser.email,
+    postcode: dbUser.postcode,
+    tier: dbUser.tier as "free" | "premium",
   };
 
   await setSessionCookie(user);
+
+  await sendEmail({
+    to: user.email,
+    subject: `Welcome to PlotPulse — monitoring ${user.postcode}`,
+    html: welcomeEmailHtml(user.name, user.postcode),
+    userId: user.id,
+    type: "welcome",
+  });
 
   return NextResponse.json({ user, verified: true });
 }

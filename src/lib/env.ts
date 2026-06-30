@@ -20,5 +20,13 @@ export function isOpenAiModerationEnabled(): boolean {
   return Boolean(process.env.OPENAI_API_KEY);
 }
 
+export function isHomedataEnabled(): boolean {
+  return Boolean(process.env.HOMEDATA_API_KEY);
+}
+
+export function isResendEnabled(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
 export const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildPropertyIntelligence } from "@/lib/api/intelligence";
 import { parsePostcode } from "@/lib/local-area";
+import { getSessionUser } from "@/lib/auth/session";
+import { syncAlertsForUser } from "@/lib/alerts/sync";
 
 export async function GET(request: NextRequest) {
   const postcode = request.nextUrl.searchParams.get("postcode");
@@ -21,8 +23,16 @@ export async function GET(request: NextRequest) {
     if (!data) {
       return NextResponse.json({ error: "Postcode not found" }, { status: 404 });
     }
+
+    const sessionUser = await getSessionUser();
+    if (sessionUser) {
+      await syncAlertsForUser(sessionUser.id, data).catch(console.error);
+    }
+
     return NextResponse.json(data, {
-      headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" },
+      headers: {
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
     });
   } catch (error) {
     console.error("Property intelligence error:", error);

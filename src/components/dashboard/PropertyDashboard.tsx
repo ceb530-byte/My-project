@@ -101,8 +101,23 @@ export function PropertyDashboard({
         </Card>
 
         <Card>
-          <p className="text-sm text-slate-500">Flood & crime</p>
+          <p className="text-sm text-slate-500">Council tax & flood</p>
           <div className="mt-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600">Band</span>
+              <Badge>
+                {data.councilTax.band}
+                {data.councilTax.source === "estimate" ? " ~" : ""}
+              </Badge>
+            </div>
+            {data.councilTax.annualChargeEstimate && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600">Est. annual</span>
+                <span className="text-sm font-medium text-slate-900">
+                  {formatCurrency(data.councilTax.annualChargeEstimate)}
+                </span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-600">Flood risk</span>
               <Badge
@@ -113,11 +128,10 @@ export function PropertyDashboard({
                 {floodRiskLabel(data.flood.riskLevel)}
               </Badge>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">Crime (750m)</span>
-              <Badge variant="default">{data.crime.total} incidents</Badge>
-            </div>
           </div>
+          {data.councilTax.note && (
+            <p className="mt-2 text-xs text-slate-400">{data.councilTax.note}</p>
+          )}
         </Card>
       </div>
 
@@ -147,6 +161,50 @@ export function PropertyDashboard({
           </div>
         </Card>
       )}
+
+      {data.schoolCatchments.length > 0 && (
+        <Card>
+          <CardHeader
+            title="School catchments"
+            subtitle="GIAS register · distance-based catchment estimate — verify with schools"
+          />
+          <div className="space-y-3">
+            {data.schoolCatchments.map((school) => (
+              <div
+                key={school.urn}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/50 px-4 py-3"
+              >
+                <div>
+                  <p className="font-medium text-slate-900">{school.name}</p>
+                  <p className="text-sm text-slate-500 capitalize">
+                    {school.phase} · {school.distanceMetres}m away
+                    {school.pupils ? ` · ${school.pupils} pupils` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant={
+                      school.ofstedRating === "Outstanding" ? "success" : "default"
+                    }
+                  >
+                    {school.ofstedRating}
+                  </Badge>
+                  <Badge variant={school.inCatchment ? "success" : "warning"}>
+                    {school.inCatchment ? "In catchment" : "Outside"}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader title="Crime summary" subtitle={`data.police.uk · ${data.crime.month}`} />
+        <p className="text-sm text-slate-600">
+          {data.crime.total} incidents within 750m · {data.crime.antisocialCount} antisocial behaviour
+        </p>
+      </Card>
 
       {data.planning.length > 0 && (
         <Card>
