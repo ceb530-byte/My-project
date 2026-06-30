@@ -25,6 +25,8 @@ model User {
   subscriptions      Subscription[]
   alerts             Alert[]
   emailLogs          EmailLog[]
+  documents          Document[]
+  reminders          Reminder[]
 }
 
 model CommunityPost {
@@ -125,4 +127,42 @@ model CouncilTaxRecord {
   createdAt DateTime @default(now())
 
   @@index([postcode])
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filename     String
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  category     String   @default("other") // insurance | epc | gas_safety | utility | mortgage | lease | conveyancing | other
+  storagePath  String
+  expiryDate   DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  reminders Reminder[]
+
+  @@index([userId])
+}
+
+model Reminder {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId  String?
+  document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  type        String    // insurance_renewal | epc_expiry | gas_safety | utility_renewal | mortgage_review | maintenance | generic
+  dueDate     DateTime
+  completed   Boolean   @default(false)
+  emailed     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, dueDate])
+  @@index([userId, completed])
 }

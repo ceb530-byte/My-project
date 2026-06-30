@@ -100,6 +100,11 @@ export function PremiumPage() {
             <span className="text-2xl">{feature.icon}</span>
             <h3 className="mt-3 font-semibold text-slate-900">{feature.title}</h3>
             <p className="mt-1 text-sm text-slate-600">{feature.description}</p>
+            {feature.title === "Document storage" && (
+              <LinkButton href="/documents" variant="ghost" size="sm" className="mt-2">
+                Open documents →
+              </LinkButton>
+            )}
           </Card>
         ))}
       </div>

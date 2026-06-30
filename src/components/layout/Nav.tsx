@@ -10,6 +10,7 @@ const navItems = [
   { href: "/feed", label: "Local feed" },
   { href: "/alerts", label: "Alerts" },
   { href: "/tools", label: "Tools" },
+  { href: "/documents", label: "Documents" },
   { href: "/premium", label: "Premium" },
   { href: "/community", label: "Community" },
 ];

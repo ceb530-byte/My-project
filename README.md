@@ -74,6 +74,10 @@ Then `npm run db:migrate && npm run db:seed`.
 | `POST /api/cron/alerts` | Send email digests (cron) |
 | `POST /api/community/posts` | Create moderated post |
 | `POST /api/auth/session` | Signup (DB + welcome email) |
+| `POST /api/documents` | Upload document (multipart form) |
+| `GET /api/documents/[id]` | Download document |
+| `GET /api/reminders` | List auto-generated to-dos |
+| `POST /api/cron/reminders` | Email document reminder digest |
 
 ## Local area model
 
