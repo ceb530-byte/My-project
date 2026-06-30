@@ -10,6 +10,7 @@ const isProtectedRoute = createRouteMatcher([
   "/premium(.*)",
   "/community(.*)",
   "/tools(.*)",
+  "/documents(.*)",
 ]);
 
 async function devMiddleware(_request: NextRequest) {
