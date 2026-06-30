@@ -1,3 +1,5 @@
+"use client";
+
 import { AppShell } from "@/components/layout/AppShell";
 import { CommunityPage } from "@/components/community/CommunityPage";
 

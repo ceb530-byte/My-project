@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import {
@@ -8,12 +9,46 @@ import {
   LOCAL_AREA_TIERS,
   parsePostcode,
 } from "@/lib/local-area";
+import { useUser } from "@/context/UserContext";
 
 export function OnboardingForm() {
+  const router = useRouter();
+  const { setUser } = useUser();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [postcode, setPostcode] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const parsed = parsePostcode(postcode);
   const recommendation = getRecommendedLocalArea(postcode);
+
+  const handleSubmit = async () => {
+    if (!parsed.isValid || !name || !email) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, postcode: parsed.full }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Signup failed");
+        return;
+      }
+
+      setUser(data.user);
+      router.push("/dashboard");
+    } catch {
+      setError("Network error — please try again");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -22,10 +57,36 @@ export function OnboardingForm() {
           Where is your property?
         </h1>
         <p className="mt-2 text-slate-600">
-          Enter your postcode to start monitoring what&apos;s changing around
-          your home or investment.
+          Enter your postcode to start monitoring live changes from official UK
+          data sources.
         </p>
       </div>
+
+      <Card>
+        <label className="block text-sm font-medium text-slate-700">
+          Your name
+        </label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Alex Morgan"
+          className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+        />
+      </Card>
+
+      <Card>
+        <label className="block text-sm font-medium text-slate-700">
+          Email
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+        />
+      </Card>
 
       <Card>
         <label className="block text-sm font-medium text-slate-700">
@@ -34,10 +95,7 @@ export function OnboardingForm() {
         <input
           type="text"
           value={postcode}
-          onChange={(e) => {
-            setPostcode(e.target.value);
-            setSubmitted(false);
-          }}
+          onChange={(e) => setPostcode(e.target.value)}
           placeholder="e.g. SW11 4QR"
           className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-lg uppercase tracking-wider outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
         />
@@ -54,7 +112,6 @@ export function OnboardingForm() {
           <p className="mt-2 text-sm leading-relaxed text-teal-800">
             {recommendation.userFacingSummary}
           </p>
-
           <div className="mt-4 space-y-2">
             {Object.values(LOCAL_AREA_TIERS).map((tier) => (
               <div
@@ -83,22 +140,18 @@ export function OnboardingForm() {
         </Card>
       )}
 
+      {error && (
+        <p className="text-center text-sm text-red-600">{error}</p>
+      )}
+
       <Button
         className="w-full"
         size="lg"
-        disabled={!parsed.isValid}
-        onClick={() => setSubmitted(true)}
+        disabled={!parsed.isValid || !name || !email || loading}
+        onClick={handleSubmit}
       >
-        {submitted ? "Redirecting to dashboard…" : "Start monitoring"}
+        {loading ? "Verifying postcode…" : "Start monitoring"}
       </Button>
-
-      {submitted && parsed.isValid && (
-        <p className="text-center text-sm text-slate-500">
-          <a href="/dashboard" className="font-medium text-teal-700 underline">
-            Continue to your property dashboard →
-          </a>
-        </p>
-      )}
     </div>
   );
 }

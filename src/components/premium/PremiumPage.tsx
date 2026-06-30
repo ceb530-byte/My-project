@@ -1,7 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import { Card, CardHeader, Badge } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/Button";
 import { formatDistance } from "@/lib/local-area";
 import { opportunities } from "@/lib/mock-data";
+import {
+  AreaComparisonTool,
+  MortgageCalculator,
+  RentalYieldCalculator,
+} from "@/components/tools/Calculators";
+import { useUser } from "@/context/UserContext";
 
 const premiumFeatures = [
   {
@@ -19,32 +28,30 @@ const premiumFeatures = [
   {
     title: "Homeowner tools",
     description:
-      "Maintenance reminders, extension cost estimates, tradesperson recommendations, insurance renewals.",
+      "Maintenance reminders, extension cost estimates, tradesperson recommendations.",
     icon: "🏠",
   },
   {
     title: "Document storage",
     description:
-      "Upload deeds, surveys, and certificates — auto-generates reminders and to-dos.",
+      "Upload deeds and certificates — auto-generates reminders and to-dos.",
     icon: "📄",
   },
-  {
-    title: "Utilities hub",
-    description:
-      "Contract renewal reminders and recommended supplier suggestions.",
-    icon: "⚡",
-  },
-];
-
-const revenuePartners = [
-  "Mortgage referrals",
-  "Conveyancing referrals",
-  "Insurance commission",
-  "Tradesperson advertising",
-  "Estate agent leads",
 ];
 
 export function PremiumPage() {
+  const { user, property } = useUser();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const defaultPrice = property?.valuation.estimatedValue ?? 685000;
+
+  const handleUpgrade = async () => {
+    setCheckoutLoading(true);
+    const res = await fetch("/api/stripe/checkout", { method: "POST" });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+    setCheckoutLoading(false);
+  };
+
   return (
     <div className="space-y-8">
       <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 p-8 text-white">
@@ -53,36 +60,52 @@ export function PremiumPage() {
         </span>
         <h1 className="mt-4 text-3xl font-bold">Turn local change into opportunity</h1>
         <p className="mt-2 max-w-2xl text-amber-100">
-          Go beyond alerts. Find investment angles, manage your home, and act
-          before your neighbours do.
+          Interactive investment tools powered by live area data from your
+          dashboard.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <LinkButton href="/onboarding" variant="secondary" size="lg">
-            Start free trial
-          </LinkButton>
-          <span className="self-center text-sm text-amber-100">
-            £9.99/month · cancel anytime
-          </span>
+          <button
+            onClick={handleUpgrade}
+            disabled={checkoutLoading}
+            className="rounded-lg bg-white px-6 py-3 text-base font-medium text-teal-900 hover:bg-teal-50 disabled:opacity-50"
+          >
+            {checkoutLoading ? "Loading…" : "Upgrade · £9.99/month"}
+          </button>
+          {!user && (
+            <LinkButton href="/onboarding" variant="secondary" size="lg">
+              Sign up first
+            </LinkButton>
+          )}
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <RentalYieldCalculator defaultPrice={defaultPrice} />
+      <MortgageCalculator defaultPrice={defaultPrice} />
+      <AreaComparisonTool
+        areaA={{
+          name: property?.location.sector ?? "Your sector",
+          averagePrice: property?.valuation.estimatedValue ?? 685000,
+          changePercent: property?.valuation.valueChangePercent ?? 2.4,
+        }}
+        areaB={{
+          name: "Adjacent district",
+          averagePrice: (property?.valuation.estimatedValue ?? 685000) * 0.92,
+          changePercent: (property?.valuation.valueChangePercent ?? 2.4) - 1.3,
+        }}
+      />
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {premiumFeatures.map((feature) => (
           <Card key={feature.title}>
             <span className="text-2xl">{feature.icon}</span>
-            <h3 className="mt-3 font-semibold text-slate-900">
-              {feature.title}
-            </h3>
+            <h3 className="mt-3 font-semibold text-slate-900">{feature.title}</h3>
             <p className="mt-1 text-sm text-slate-600">{feature.description}</p>
           </Card>
         ))}
       </div>
 
       <Card>
-        <CardHeader
-          title="Opportunity finder preview"
-          subtitle="Premium · sample opportunities near SW11 4QR"
-        />
+        <CardHeader title="Opportunity finder preview" subtitle="Premium feature samples" />
         <div className="space-y-3">
           {opportunities.map((opp) => (
             <div
@@ -97,79 +120,10 @@ export function PremiumPage() {
               </div>
               <p className="text-sm text-slate-500">{opp.address}</p>
               <p className="mt-1 text-sm text-slate-600">{opp.summary}</p>
-              {opp.estimatedUpside && (
-                <p className="mt-2 text-sm font-medium text-teal-700">
-                  {opp.estimatedUpside}
-                </p>
-              )}
             </div>
           ))}
         </div>
       </Card>
-
-      <Card>
-        <CardHeader title="Investment tools" subtitle="Included with Premium" />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <ToolPreview
-            title="Rental yield calculator"
-            fields={["Purchase price", "Monthly rent", "Costs"]}
-            result="Gross yield: 5.8%"
-          />
-          <ToolPreview
-            title="Mortgage calculator"
-            fields={["Deposit", "Rate", "Term"]}
-            result="Monthly: £2,847"
-          />
-          <ToolPreview
-            title="Area comparison"
-            fields={["SW11 vs SW12", "Price growth", "Yield"]}
-            result="SW11 +2.4% vs SW12 +1.1%"
-          />
-          <ToolPreview
-            title="Capital growth trends"
-            fields={["5yr district trend", "Sector trend"]}
-            result="District: +28% since 2021"
-          />
-        </div>
-      </Card>
-
-      <Card>
-        <CardHeader title="Partner revenue model" />
-        <p className="mb-4 text-sm text-slate-600">
-          Free tier drives engagement; Premium unlocks tools. Referrals and
-          partner placements are contextual — shown when relevant to your
-          property journey.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {revenuePartners.map((partner) => (
-            <Badge key={partner}>{partner}</Badge>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function ToolPreview({
-  title,
-  fields,
-  result,
-}: {
-  title: string;
-  fields: string[];
-  result: string;
-}) {
-  return (
-    <div className="rounded-lg border border-dashed border-slate-200 p-4">
-      <h4 className="font-medium text-slate-900">{title}</h4>
-      <ul className="mt-2 space-y-1">
-        {fields.map((f) => (
-          <li key={f} className="text-xs text-slate-400">
-            {f}
-          </li>
-        ))}
-      </ul>
-      <p className="mt-3 text-sm font-semibold text-teal-700">{result}</p>
     </div>
   );
 }

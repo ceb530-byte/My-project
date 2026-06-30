@@ -3,17 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { useUser } from "@/context/UserContext";
 
 const navItems = [
   { href: "/dashboard", label: "Property" },
   { href: "/feed", label: "Local feed" },
   { href: "/alerts", label: "Alerts" },
+  { href: "/tools", label: "Tools" },
   { href: "/premium", label: "Premium" },
   { href: "/community", label: "Community" },
 ];
 
 export function AppNav() {
   const pathname = usePathname();
+  const { user, signOut } = useUser();
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
@@ -45,12 +48,26 @@ export function AppNav() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/onboarding"
-            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 sm:inline"
-          >
-            SW11 4QR
-          </Link>
+          {user ? (
+            <>
+              <span className="hidden text-sm text-slate-500 sm:inline">
+                {user.postcode}
+              </span>
+              <button
+                onClick={() => signOut()}
+                className="hidden rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 sm:inline"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/onboarding"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 sm:inline"
+            >
+              Sign in
+            </Link>
+          )}
           <Link
             href="/premium"
             className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600"
@@ -94,10 +111,10 @@ export function MarketingNav() {
         </Link>
         <div className="flex items-center gap-3">
           <Link
-            href="/dashboard"
+            href="/onboarding"
             className="text-sm font-medium text-teal-100 hover:text-white"
           >
-            View demo
+            Try demo
           </Link>
           <Link
             href="/onboarding"

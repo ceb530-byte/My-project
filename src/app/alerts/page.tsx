@@ -1,11 +1,12 @@
+"use client";
+
 import { AppShell } from "@/components/layout/AppShell";
-import { AlertsList } from "@/components/alerts/AlertsList";
-import { alerts } from "@/lib/mock-data";
+import { LiveAlerts } from "@/components/alerts/LiveAlerts";
 
 export default function AlertsPage() {
   return (
     <AppShell>
-      <AlertsList alerts={alerts} />
+      <LiveAlerts />
     </AppShell>
   );
 }
